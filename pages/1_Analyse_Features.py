@@ -1,5 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
+import plotly.express as px
 import numpy as np
 import pandas as pd
 
@@ -8,6 +9,7 @@ feature_names = st.session_state.feature_names
 
 df_sample = pd.read_csv("Data/sample_data.csv")
 df_global = pd.read_csv("Data/infos_glo.csv")
+df_bivarie = pd.read_csv("Data/infos_glo_complete.csv")
 
 client_sample = df_sample[df_sample["SK_ID_CURR"] == client_id].copy()
 
@@ -57,5 +59,34 @@ elif len(selected_features) == 1:
     # Afficher la figure dans Streamlit
     st.plotly_chart(fig)
 
-else:
+elif len(selected_features) == 2:
+    #Récupération des données
+    client_values = client_sample[selected_features]
+    global_values = df_bivarie[selected_features]
+
+    fig = px.scatter()
+
+    # Ajouter les points pour global_values en bleu
+    fig.add_trace(px.scatter(global_values, 
+                            x=selected_features[0], 
+                            y=selected_features[1]).data[0])
+
+    # Ajouter les points pour client_values en rouge
+    client_trace = px.scatter(client_values, 
+                            x=selected_features[0], 
+                            y=selected_features[1], 
+                            color_discrete_sequence=["red"]).data[0]
+    client_trace.marker.symbol = 'x'
+    client_trace.marker.size = 10
+    client_trace.marker.line.width = 2
+    client_trace.marker.line.color = 'red'
+    fig.add_trace(client_trace)
     
+    
+    # Mise en page du graphique
+    fig.update_layout(title=f'Analyse Bivariée entre {selected_features[0]} et {selected_features[1]}',
+                      xaxis_title=f'{selected_features[0]}', 
+                      yaxis_title=f'{selected_features[1]}')
+
+    # Afficher la figure dans Streamlit
+    st.plotly_chart(fig)
