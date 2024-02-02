@@ -1,7 +1,6 @@
 import streamlit as st
 import plotly.graph_objects as go
 import requests
-import seaborn as sns
 import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -10,12 +9,6 @@ from bs4 import BeautifulSoup
 st.set_page_config(
     page_title="Dashboard Credit"
 )
-
-def simulate_colorblindness(palette, blindness_type):
-    # Utilisez colorcet pour ajuster la palette en fonction du type de daltonisme
-    simulated_palette = cc.apply_cmap(palette, blindness_type)
-    return simulated_palette
-
 
 def make_prediction(file):
     # URL de l'API
