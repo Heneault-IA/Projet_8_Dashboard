@@ -56,7 +56,7 @@ def make_prediction(file):
     else:
         return {"error": f"Erreur de la requête : {response.status_code}"}
 
-def make_gauge(probabilite, prediction, palette):
+def make_gauge(probabilite, prediction):
     # Créer la jauge colorée
     fig = go.Figure()
 
@@ -122,10 +122,6 @@ def main():
 
     st.title("Dashboard de décision d'octroi du crédit")
 
-    # Définition des palettes de couleurs
-    original_palette = sns.color_palette("viridis", as_cmap=True)
-    colorblind_palette = sns.color_palette("colorblind")
-
     # Bouton pour activer/désactiver le mode daltonien
     colorblind_mode = st.checkbox("Activer le mode daltonien")
 
@@ -164,7 +160,7 @@ def main():
         description_gauge = f"Le crédit est {prediction}, car le score est de {proba} sur 47"
         st.markdown(description_gauge)
     else:
-        fig = make_gauge((proba/100), prediction, colorblind_mode)
+        fig = make_gauge((proba/100), prediction)
 
         # Afficher la jauge dans Streamlit
         st.plotly_chart(fig, use_container_width=True)
