@@ -1,6 +1,7 @@
 import streamlit as st
 import plotly.graph_objects as go
 import requests
+import seaborn as sns
 import numpy as np
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -10,10 +11,16 @@ st.set_page_config(
     page_title="Dashboard Credit"
 )
 
-# URL de l'API
-api_url = "https://home-credi-default-risk-2d75b983d33b.herokuapp.com"
+def simulate_colorblindness(palette, blindness_type):
+    # Utilisez colorcet pour ajuster la palette en fonction du type de daltonisme
+    simulated_palette = cc.apply_cmap(palette, blindness_type)
+    return simulated_palette
+
 
 def make_prediction(file):
+    # URL de l'API
+    api_url = "https://home-credi-default-risk-2d75b983d33b.herokuapp.com"
+
     # Créer un objet FormData pour envoyer le fichier 
     files={'file': ("test.csv", file)}
 
@@ -56,7 +63,7 @@ def make_prediction(file):
     else:
         return {"error": f"Erreur de la requête : {response.status_code}"}
 
-def make_gauge(probabilite, prediction):
+def make_gauge(probabilite, prediction, palette):
     # Créer la jauge colorée
     fig = go.Figure()
 
@@ -73,36 +80,46 @@ def make_gauge(probabilite, prediction):
                 {'range': [0.25, 0.47], 'color': "orange"},
                 {'range': [0.47, 0.75], 'color': "yellow"},
                 {'range': [0.75, 1], 'color': "green"},
-            ],
+            ]
         }
     ))
 
     return fig
 
 
-def make_graph_feature_importance(features_client, features_global, feature_names):
+def make_graph_feature_importance(features_client, features_global, feature_names, colorblind_mode=False):
+    if colorblind_mode:
+        color_client = "#1f78b4"
+        color_global = "#ff7f00"
+    else:
+        color_client = "#1f78b4"
+        color_global = "#4f9eff"
+    
     fig = go.Figure()
 
     # Tracer les barres du premier tableau
     fig.add_trace(go.Bar(
         x=feature_names,
         y=features_client,
-        name='Importance Client'
+        name='Importance Client',
+        marker_color=color_client
     ))
 
     # Tracer les barres du deuxième tableau
     fig.add_trace(go.Bar(
         x=feature_names,
         y=features_global,
-        name='Importance Globale'
+        name='Importance Globale',
+        marker_color=color_global
     ))
 
     # Mise en page du graphique
     fig.update_layout(
         barmode='group',  # Pour superposer les barres
-        title='Feature Importance',
-        xaxis_title='Features',
-        yaxis_title='Valeurs'
+        title='Importance des Principaux Critères de Prise de Décision',
+        xaxis_title='Critères',
+        yaxis_title='Valeurs',
+        
     )
 
     return fig
@@ -110,17 +127,23 @@ def make_graph_feature_importance(features_client, features_global, feature_name
 
 def main():
 
-    st.title("Dashboard")
+    st.title("Dashboard de décision d'octroi du crédit")
 
-    
+    # Définition des palettes de couleurs
+    original_palette = sns.color_palette("viridis", as_cmap=True)
+    colorblind_palette = sns.color_palette("colorblind")
+
+    # Bouton pour activer/désactiver le mode daltonien
+    colorblind_mode = st.checkbox("Activer le mode daltonien")
 
     df_samples = pd.read_csv("Data/sample_data.csv")
-    infos = pd.read_csv("Data/infos_data.csv")
 
     clients_id = df_samples["SK_ID_CURR"]
 
     if 'client_id' not in st.session_state:
         st.session_state.client_id = None
+    if 'classe' not in st.session_state:
+        st.session_state.classe = None
     if 'feature_names' not in st.session_state:
         st.session_state.feaure_names = None
 
@@ -140,10 +163,19 @@ def main():
     proba = 100-float(probas[0])
     prediction = predictions[0]
     
-    fig = make_gauge((proba/100), prediction)
+    st.session_state.classe = prediction
 
-    # Afficher la jauge dans Streamlit
-    st.plotly_chart(fig, use_container_width=True)
+    desc_gauge = st.checkbox("Activer la description textuelle de la gauge")
+
+    if desc_gauge:
+        description_gauge = f"Le crédit est {prediction}, car le score est de {proba} sur 47"
+        st.markdown(description_gauge)
+    else:
+        fig = make_gauge((proba/100), prediction, colorblind_mode)
+
+        # Afficher la jauge dans Streamlit
+        st.plotly_chart(fig, use_container_width=True)
+
 
     if prediction== "Accepté":
         df_features_samples = pd.read_csv("Data/shap_samples_negative.csv")
@@ -164,11 +196,28 @@ def main():
 
     features_global = df_features.loc[0, feature_names]
 
-    fig = make_graph_feature_importance(features, features_global, feature_names)
+    desc_importance = st.checkbox("Afficher un tableau")
 
-    # Afficher la figure dans Streamlit
-    st.plotly_chart(fig)
+    if desc_importance:
 
+        # Création du DataFrame
+        df_client = pd.DataFrame(features).transpose()
+        df_client.index=["Valeurs Client"]
+        df_global = pd.DataFrame(features_global).transpose()
+        df_global.index=["Valeurs Globales"]
+        concat_features = pd.concat([df_client, df_global])
+
+        st.write("Importance des Principaux Critères de Prise de Décision")
+        #Affichage du Tableau
+        st.table(concat_features.transpose())
+
+    else:
+
+        # Création de la figure
+        fig = make_graph_feature_importance(features, features_global, feature_names, colorblind_mode)
+
+        # Afficher la figure dans Streamlit
+        st.plotly_chart(fig)
 
 if __name__ == "__main__":
     main()
