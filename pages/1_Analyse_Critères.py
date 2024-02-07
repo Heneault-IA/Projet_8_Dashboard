@@ -89,13 +89,10 @@ if len(selected_features) == 1:
                             )
                     )
     
-    # Mise en page du graphique
-    if (client_value[0] > 0) & (classe_client_value[0] > 0) & (other_classe_value[0] >= 0):
-        max_range = max([client_value[0], classe_client_value[0], other_classe_value[0]]) + 0.01
-    elif (client_value[0] < 0) & (classe_client_value[0] < 0) & (other_classe_value[0] <= 0): 
+    if (client_value[0] < 0) & (classe_client_value[0] < 0) & (other_classe_value[0] <= 0): 
         max_range = min([client_value[0], classe_client_value[0], other_classe_value[0]]) - 0.01
     else:
-        max_range=1
+        max_range = max([client_value[0], classe_client_value[0], other_classe_value[0]]) + 0.01
 
     fig.update_layout(
         barmode='group',  # Pour superposer les barres
@@ -133,18 +130,41 @@ if len(selected_features) == 1:
         st.table(concat_features)
 
 elif len(selected_features) == 2:
+    checkbox_classe = st.checkbox("Cliquez pour voir la séparation par classes")
+    #Récupération des données
+    if checkbox_classe:
+        classe_client_value = df_classes.loc[df_classes["TARGET"]==target, selected_features]
+        other_classe_value = df_classes.loc[df_classes["TARGET"]==other, selected_features]
+        # Rajouter deuxième classe
+        nom_classe = classe
+    else:
+        global_values = df_classes[selected_features]
+        nom_classe = "Global"
     #Récupération des données
     client_values = client_sample[selected_features]
-    global_values = df_bivarie[selected_features]
 
     fig = px.scatter()
 
-    # Ajouter les points pour global_values en bleu
-    global_trace = px.scatter(global_values, 
-                            x=selected_features[0], 
-                            y=selected_features[1]).data[0]
-    global_trace.marker.color = color_global
-    fig.add_trace(global_trace)
+    if checkbox_classe:
+        classe_client_trace = px.scatter(classe_client_value, 
+                                x=selected_features[0], 
+                                y=selected_features[1]).data[0]
+        classe_client_trace.marker.color = color_classe_client
+        fig.add_trace(classe_client_trace)
+
+        other_classe_trace = px.scatter(other_classe_value, 
+                                x=selected_features[0], 
+                                y=selected_features[1]).data[0]
+        other_classe_trace.marker.color = clolor_other_classe
+        fig.add_trace(other_classe_trace)
+
+    else :
+        # Ajouter les points pour global_values en bleu
+        global_trace = px.scatter(global_values, 
+                                x=selected_features[0], 
+                                y=selected_features[1]).data[0]
+        global_trace.marker.color = color_global
+        fig.add_trace(global_trace)
 
     # Ajouter les points pour client_values en rouge
     client_trace = px.scatter(client_values, 
