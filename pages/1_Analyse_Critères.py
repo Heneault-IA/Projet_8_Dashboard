@@ -18,12 +18,12 @@ if colorblind_mode:
     color_client = "#1f78b4"
     color_global = "#ff7f00"
     color_classe_client = "#ff7f00"
-    clolor_other_classe = "#984ea3"
+    color_other_classe = "#984ea3"
 else:
     color_client = "#7fb8da"
     color_global = "#0074cc"
     color_classe_client = "#0074cc"
-    clolor_other_classe = "#001f3f"
+    color_other_classe = "#001f3f"
 
 client_id = st.session_state.client_id
 classe = st.session_state.classe
@@ -83,7 +83,7 @@ if len(selected_features) == 1:
         fig.add_trace(go.Bar(x=[other_classe], 
                             y=[other_classe_value[0]], 
                             name=other_classe,
-                            marker_color=clolor_other_classe
+                            marker_color=color_other_classe
                             )
                     )
     
@@ -141,47 +141,48 @@ elif len(selected_features) == 2:
     #Récupération des données
     client_values = client_sample[selected_features]
 
-    fig = px.scatter()
+    fig = go.Figure()
 
     if checkbox_classe:
-        classe_client_trace = px.scatter(classe_client_value, 
-                                x=selected_features[0], 
-                                y=selected_features[1],
-                                name=classe).data[0]
-        classe_client_trace.marker.color = color_classe_client
-        fig.add_trace(classe_client_trace)
+        fig.add_trace(go.Scatter( 
+                                x=classe_client_value[selected_features[0]], 
+                                y=classe_client_value[selected_features[1]],
+                                name=classe,
+                                marker_color = color_classe_client,
+                                text=classe))
 
-        other_classe_trace = px.scatter(other_classe_value, 
-                                x=selected_features[0], 
-                                y=selected_features[1],
-                                name=other_classe).data[0]
-        other_classe_trace.marker.color = clolor_other_classe
-        fig.add_trace(other_classe_trace)
+        fig.add_trace(go.Scatter(
+                                x=other_classe_value[selected_features[0]], 
+                                y=other_classe_value[selected_features[1]],
+                                name=other_classe,
+                                marker_color = color_other_classe,
+                                text=other_classe))
 
     else :
         # Ajouter les points pour global_values en bleu
-        global_trace = px.scatter(global_values, 
-                                x=selected_features[0], 
-                                y=selected_features[1]).data[0]
-        global_trace.marker.color = color_global
-        fig.add_trace(global_trace)
+        fig.add_trace(go.Scatter(
+                                x=global_values[selected_features[0]], 
+                                y=global_values[selected_features[1]],
+                                name="Global",
+                                marker_color = color_global))
 
     # Ajouter les points pour client_values en rouge
-    client_trace = px.scatter(client_values, 
-                            x=selected_features[0], 
-                            y=selected_features[1], 
-                            color_discrete_sequence=[color_client]).data[0]
-    client_trace.marker.symbol = 'x'
-    client_trace.marker.size = 10
-    client_trace.marker.line.width = 2
-    client_trace.marker.line.color = color_client
-    fig.add_trace(client_trace)
-    
+    fig.add_trace(go.Scatter(
+                            x=client_values[selected_features[0]], 
+                            y=client_values[selected_features[1]],
+                            name="Client",
+                            marker_symbol = 'x',
+                            marker_size = 10,
+                            marker_line_width = 2,
+                            marker_color = color_client,
+                            marker_line_color = color_client
+                            ))    
     
     # Mise en page du graphique
+    fig.update_traces(mode="markers")
     fig.update_layout(title=f'Analyse des critères choisis ({selected_features[0]} et {selected_features[1]})',
                       xaxis_title=f'{selected_features[0]}', 
-                      yaxis_title=f'{selected_features[1]}')
+                      yaxis_title=f'{selected_features[1]}',)
 
     # Afficher la figure dans Streamlit
     st.plotly_chart(fig)
