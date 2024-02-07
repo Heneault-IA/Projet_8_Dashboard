@@ -55,8 +55,6 @@ if len(selected_features) == 1:
     if checkbox_classe:
         classe_client_value = df_classes.loc[df_classes["TARGET"]==target, selected_features].values[0]
         other_classe_value = df_classes.loc[df_classes["TARGET"]==other, selected_features].values[0]
-        # Rajouter deuxième classe
-        nom_classe = classe
     else:
         classe_client_value = df_global[selected_features].values[0]
         other_classe_value = [0]
@@ -76,7 +74,7 @@ if len(selected_features) == 1:
 
     fig.add_trace(go.Bar(x=[nom_classe], 
                          y=[classe_client_value[0]], 
-                         name=nom_classe,
+                         name=classe,
                          marker_color=color_classe_client
                          )
                 )
@@ -85,7 +83,7 @@ if len(selected_features) == 1:
         fig.add_trace(go.Bar(x=[other_classe], 
                             y=[other_classe_value[0]], 
                             name=other_classe,
-                         marker_color=clolor_other_classe
+                            marker_color=clolor_other_classe
                             )
                     )
     
@@ -97,7 +95,7 @@ if len(selected_features) == 1:
     fig.update_layout(
         barmode='group',  # Pour superposer les barres
         title=f'{selected_features[0]}',
-        xaxis_title=f'Classe du client : {nom_classe}',
+        xaxis_title=f'Classe du client : {classe}',
         yaxis_title='Valeurs',
         yaxis=dict(range=[0, max_range])
     )
@@ -148,13 +146,15 @@ elif len(selected_features) == 2:
     if checkbox_classe:
         classe_client_trace = px.scatter(classe_client_value, 
                                 x=selected_features[0], 
-                                y=selected_features[1]).data[0]
+                                y=selected_features[1],
+                                name=classe).data[0]
         classe_client_trace.marker.color = color_classe_client
         fig.add_trace(classe_client_trace)
 
         other_classe_trace = px.scatter(other_classe_value, 
                                 x=selected_features[0], 
-                                y=selected_features[1]).data[0]
+                                y=selected_features[1],
+                                name=other_classe).data[0]
         other_classe_trace.marker.color = clolor_other_classe
         fig.add_trace(other_classe_trace)
 
