@@ -72,7 +72,7 @@ if len(selected_features) == 1:
                          )
                 )
 
-    fig.add_trace(go.Bar(x=[nom_classe], 
+    fig.add_trace(go.Bar(x=[classe], 
                          y=[classe_client_value[0]], 
                          name=classe,
                          marker_color=color_classe_client
@@ -111,15 +111,15 @@ if len(selected_features) == 1:
         df_client.index=["Valeurs Client"]
         if checkbox_classe:
             df_classe = pd.DataFrame(classe_client_value).transpose()
-            df_classe.index = [nom_classe]
+            df_classe.index = [f"Moyenne Classe Client : {classe}"]
             df_other = pd.DataFrame(other_classe_value).transpose()
-            df_other.index = [other_classe]
+            df_other.index = [f"Moyenne Autre Classe : {other_classe}"]
 
             df_global = pd.concat([df_classe, df_other])
         else:
 
             df_global = pd.DataFrame(classe_client_value).transpose()
-            df_global.index=["Valeurs Globales"]
+            df_global.index=["Moyenne Valeurs Globales"]
         concat_features = pd.concat([df_client, df_global])
         concat_features.columns=[selected_features]
 
@@ -193,8 +193,16 @@ elif len(selected_features) == 2:
         df_client = pd.DataFrame(client_values)
         df_client.index = ["Valeurs Client"]
 
-        df_global = pd.DataFrame(global_values.mean()).transpose()
-        df_global.index = ["Valeurs Globales"]
+        if checkbox_classe:
+            df_client_classe = pd.DataFrame(classe_client_value.mean()).transpose()
+            df_other_classe = pd.DataFrame(other_classe_value.mean()).transpose()
+
+            df_global = pd.concat([df_client_classe, df_other_classe])
+            df_global.index = [f"Moyenne Classe Client : {classe}", f"Moyenne Autre Classe : {other_classe}"]            
+
+        else:
+            df_global = pd.DataFrame(global_values.mean()).transpose()
+            df_global.index = ["Moyenne Valeurs Globales"]
 
         df_concat = pd.concat([df_client, df_global])        
 
